@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iran/Oil Conflict — Portfolio Exposure Analyser | Nifty 500</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:     #07111E;
+    --bg2:    #0D1B2A;
+    --bg3:    #122035;
+    --card:   #0F2236;
+    --gold:   #C9A227;
+    --gold2:  #E8C567;
+    --red:    #C0392B;
+    --amber:  #D4860A;
+    --green:  #1A8C4E;
+    --blue:   #1A5276;
+    --text:   #E8EEF4;
+    --text2:  #9BB0C8;
+    --border: rgba(201,162,39,0.20);
+    --red-l:  rgba(192,57,43,0.12);
+    --amb-l:  rgba(212,134,10,0.12);
+    --grn-l:  rgba(26,140,78,0.12);
+    --blu-l:  rgba(26,82,118,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; min-height:100vh; }
+
+  /* ── NAV ── */
+  nav { background:linear-gradient(90deg,#050D18,#0D1B2A,#050D18);
+    border-bottom:2px solid var(--gold); padding:0 32px; display:flex;
+    align-items:center; justify-content:space-between; height:58px; position:sticky; top:0; z-index:100; }
+  nav .logo { display:flex; align-items:center; gap:12px; }
+  nav .logo span { font-size:15px; font-weight:800; color:var(--gold); letter-spacing:0.5px; }
+  nav .logo sub { font-size:10px; color:var(--text2); display:block; font-weight:400; letter-spacing:0; }
+  .nav-badge { background:rgba(192,57,43,0.2); border:1px solid var(--red);
+    color:#FF6B5B; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.8px; }
+
+  /* ── HERO ── */
+  .hero { background:linear-gradient(135deg,#050E1C 0%,#0D2035 40%,#071218 100%);
+    border-bottom:1px solid var(--border); padding:52px 48px 44px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-40px; left:50%; transform:translateX(-50%);
+    width:600px; height:300px; background:radial-gradient(ellipse,rgba(201,162,39,0.07),transparent 70%); pointer-events:none; }
+  .hero h1 { font-size:32px; font-weight:900; color:var(--gold); line-height:1.2; letter-spacing:0.5px; margin-bottom:10px; }
+  .hero p { font-size:15px; color:var(--text2); max-width:680px; margin:0 auto 28px; line-height:1.6; }
+  .hero .badges { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .hbadge { padding:5px 16px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.8px; }
+  .hb-r { background:var(--red-l); border:1px solid rgba(192,57,43,0.5); color:#FF6B5B; }
+  .hb-a { background:var(--amb-l); border:1px solid rgba(212,134,10,0.5); color:#F0A030; }
+  .hb-g { background:var(--grn-l); border:1px solid rgba(26,140,78,0.5); color:#3CC87A; }
+  .hb-b { background:var(--blu-l); border:1px solid rgba(26,82,118,0.5); color:#7FB3D3; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width:1400px; margin:0 auto; padding:36px 32px; }
+
+  /* ── HOW IT WORKS ── */
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:36px; }
+  .step { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px;
+    display:flex; align-items:flex-start; gap:14px; }
+  .step-num { width:34px; height:34px; border-radius:50%; background:var(--gold);
+    color:#000; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-text h3 { font-size:13px; font-weight:700; color:var(--gold2); margin-bottom:4px; }
+  .step-text p { font-size:12px; color:var(--text2); line-height:1.5; }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-section { background:var(--card); border:2px dashed var(--gold); border-radius:16px;
+    padding:48px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:32px; position:relative; }
+  .upload-section:hover, .upload-section.drag { border-color:var(--gold2); background:rgba(201,162,39,0.04); }
+  .upload-section.drag { transform:scale(1.01); }
+  .upload-icon { font-size:48px; margin-bottom:16px; }
+  .upload-section h2 { font-size:20px; font-weight:700; color:var(--gold); margin-bottom:8px; }
+  .upload-section p { color:var(--text2); font-size:14px; margin-bottom:20px; }
+  .upload-section input[type=file] { display:none; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:8px;
+    font-size:14px; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; letter-spacing:0.3px; }
+  .btn-gold { background:linear-gradient(135deg,#C9A227,#E8C567); color:#000; }
+  .btn-gold:hover { background:linear-gradient(135deg,#E8C567,#C9A227); transform:translateY(-1px); box-shadow:0 4px 16px rgba(201,162,39,0.4); }
+  .btn-green { background:linear-gradient(135deg,#1A8C4E,#27AE60); color:#fff; }
+  .btn-green:hover { background:linear-gradient(135deg,#27AE60,#1A8C4E); transform:translateY(-1px); }
+  .btn-outline { background:transparent; color:var(--gold); border:1px solid var(--gold); }
+  .btn-outline:hover { background:rgba(201,162,39,0.08); }
+  .hint { font-size:12px; color:var(--text2); margin-top:14px; opacity:0.8; }
+
+  /* ── LOADING ── */
+  #loading { display:none; padding:32px; text-align:center; }
+  .spinner { width:40px; height:40px; border:3px solid rgba(201,162,39,0.2);
+    border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ── RESULTS ── */
+  #results { display:none; }
+  .results-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .results-header h2 { font-size:20px; font-weight:800; color:var(--gold); }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; position:relative; overflow:hidden; }
+  .kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi.kpi-a::after { background:var(--amber); }
+  .kpi.kpi-r::after { background:var(--red); }
+  .kpi.kpi-g::after { background:var(--green); }
+  .kpi.kpi-b::after { background:var(--blue); }
+  .kpi.kpi-w::after { background:var(--gold); }
+  .kpi-label { font-size:10px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+  .kpi-val { font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .kpi-sub { font-size:10px; color:var(--text2); margin-top:3px; }
+  .kpi-r .kpi-val { color:#FF6B5B; }
+  .kpi-a .kpi-val { color:#F0A030; }
+  .kpi-g .kpi-val { color:#3CC87A; }
+  .kpi-b .kpi-val { color:#7FB3D3; }
+  .kpi-w .kpi-val { color:var(--gold2); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+  .filter-bar span { font-size:12px; color:var(--text2); font-weight:600; }
+  .filt { padding:5px 14px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer;
+    border:1px solid var(--border); background:transparent; color:var(--text2); transition:all 0.15s; }
+  .filt:hover, .filt.active { border-color:var(--gold); color:var(--gold); background:rgba(201,162,39,0.08); }
+  .filt.f-all.active { border-color:var(--gold); color:var(--gold); }
+  .filt.f-crit.active { border-color:var(--red); color:#FF6B5B; background:var(--red-l); }
+  .filt.f-elev.active { border-color:var(--amber); color:#F0A030; background:var(--amb-l); }
+  .filt.f-neu.active { border-color:#888; color:#aaa; background:rgba(100,100,100,0.1); }
+  .filt.f-low.active { border-color:var(--green); color:#3CC87A; background:var(--grn-l); }
+  .filt.f-ben.active { border-color:var(--blue); color:#7FB3D3; background:var(--blu-l); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:12px; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead tr { background:var(--bg2); }
+  thead th { padding:11px 12px; text-align:left; font-size:10px; font-weight:700; color:var(--gold2);
+    text-transform:uppercase; letter-spacing:0.7px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  thead th.c { text-align:center; }
+  tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.1s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:nth-child(odd) { background:rgba(255,255,255,0.015); }
+  tbody tr:hover { background:rgba(201,162,39,0.04); }
+  tbody td { padding:9px 12px; vertical-align:middle; }
+  tbody td.c { text-align:center; }
+
+  .score-cell { display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:24px; border-radius:6px; font-weight:800; font-size:13px; }
+  .sc-c { background:rgba(192,57,43,0.8); color:#fff; }
+  .sc-e { background:rgba(212,134,10,0.8); color:#fff; }
+  .sc-l { background:rgba(26,140,78,0.8); color:#fff; }
+  .sc-v { background:rgba(26,82,118,0.8); color:#fff; }
+
+  .band-pill { display:inline-block; padding:2px 10px; border-radius:12px; font-size:10px; font-weight:800; letter-spacing:0.5px; }
+  .bp-crit { background:rgba(192,57,43,0.18); color:#FF6B5B; border:1px solid rgba(192,57,43,0.4); }
+  .bp-elev { background:rgba(212,134,10,0.18); color:#F0A030; border:1px solid rgba(212,134,10,0.4); }
+  .bp-neu  { background:rgba(80,80,80,0.18); color:#aaa; border:1px solid rgba(120,120,120,0.4); }
+  .bp-low  { background:rgba(26,140,78,0.18); color:#3CC87A; border:1px solid rgba(26,140,78,0.4); }
+  .bp-ben  { background:rgba(26,82,118,0.18); color:#7FB3D3; border:1px solid rgba(26,82,118,0.4); }
+  .bp-at   { background:rgba(192,57,43,0.12); color:#FF8070; border:1px solid rgba(192,57,43,0.3); }
+  .bp-nt   { background:rgba(80,80,80,0.12); color:#aaa; border:1px solid rgba(120,120,120,0.3); }
+  .bp-bf   { background:rgba(26,140,78,0.12); color:#3CC87A; border:1px solid rgba(26,140,78,0.3); }
+
+  .ticker-cell { font-family:'Courier New',monospace; font-weight:700; font-size:12px; color:var(--gold2); }
+  .note-cell { font-size:11px; color:var(--text2); max-width:280px; line-height:1.4; }
+  .unmatched { color:#777; font-style:italic; font-size:11px; }
+
+  .not-found-row td { color:#667; font-size:11px; }
+  .not-found-row .ticker-cell { color:#667; }
+
+  /* ── PORTFOLIO WEIGHT BAR ── */
+  .wt-bar { display:flex; align-items:center; gap:6px; }
+  .wt-track { width:50px; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; }
+  .wt-fill { height:100%; border-radius:3px; }
+
+  /* ── SUMMARY CHART (CSS only) ── */
+  .sector-chart { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; }
+  .chart-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .chart-title { font-size:11px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:14px; }
+  .dist-bars { display:flex; flex-direction:column; gap:8px; }
+  .dist-row { display:flex; align-items:center; gap:10px; }
+  .dist-label { font-size:11px; color:var(--text2); width:90px; flex-shrink:0; }
+  .dist-track { flex:1; height:16px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+  .dist-bar { height:100%; border-radius:4px; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; min-width:24px; }
+  .dist-bar span { font-size:10px; font-weight:700; color:#fff; }
+  .dist-count { font-size:11px; font-weight:700; width:24px; text-align:right; }
+
+  /* ── DONUT (SVG) ── */
+  .donut-wrap { display:flex; align-items:center; gap:20px; justify-content:center; }
+  .donut-legend { display:flex; flex-direction:column; gap:8px; }
+  .dl-item { display:flex; align-items:center; gap:8px; font-size:11px; }
+  .dl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* ── UNMATCHED ── */
+  #unmatched-section { margin-top:24px; }
+  .unmatched-box { background:rgba(212,134,10,0.06); border:1px solid rgba(212,134,10,0.25);
+    border-radius:10px; padding:16px 18px; }
+  .unmatched-box h3 { font-size:12px; font-weight:700; color:#F0A030; margin-bottom:8px; }
+  .unmatched-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .uchip { background:rgba(212,134,10,0.1); border:1px solid rgba(212,134,10,0.3);
+    color:#F0A030; padding:3px 10px; border-radius:12px; font-size:11px; font-family:monospace; }
+
+  /* ── SAMPLE FORMAT ── */
+  .format-box { background:rgba(26,82,118,0.08); border:1px solid rgba(26,82,118,0.3);
+    border-radius:10px; padding:16px 18px; margin-top:16px; }
+  .format-box h3 { font-size:12px; font-weight:700; color:#7FB3D3; margin-bottom:10px; }
+  .format-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .format-table th { background:rgba(26,82,118,0.2); color:#7FB3D3; padding:6px 10px; text-align:left; font-size:10px; letter-spacing:0.5px; }
+  .format-table td { padding:5px 10px; color:var(--text2); border-bottom:1px solid rgba(255,255,255,0.05); font-family:monospace; }
+
+  /* ── FOOTER ── */
+  footer { border-top:1px solid var(--border); padding:20px 32px; text-align:center; }
+  footer p { font-size:11px; color:var(--text2); opacity:0.7; }
+  footer a { color:var(--gold); text-decoration:none; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px) {
+    .hero { padding:32px 20px; }
+    .hero h1 { font-size:22px; }
+    .main { padding:20px 16px; }
+    .steps { grid-template-columns:1fr; }
+    .kpi-strip { grid-template-columns:repeat(2,1fr); }
+    .sector-chart { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#C9A227" opacity="0.15"/><text x="16" y="21" text-anchor="middle" fill="#C9A227" font-size="14" font-weight="900">⚑</text></svg>
+    <div>
+      <span>IRAN / OIL RISK ANALYSER</span>
+      <sub>Nifty 500 · Three Cascade Layers · March 2026</sub>
+    </div>
+  </div>
+  <div class="nav-badge">🔴 HORMUZ DISRUPTED · BRENT $110+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Iran / Oil Conflict<br>Portfolio Exposure Analyser</h1>
+  <p>Upload your equity portfolio in Excel format. Our engine cross-references every holding against our Nifty 500 Iran/Oil shock database — scored across three cascade layers — and delivers an instant downloadable risk heat map.</p>
+  <div class="badges">
+    <span class="hbadge hb-r">🔴 CRITICAL — Direct Energy Impact</span>
+    <span class="hbadge hb-a">🟠 ELEVATED — Supply Chain Hit</span>
+    <span class="hbadge hb-g">🟢 BENEFICIARY — Net Positive</span>
+    <span class="hbadge hb-b">🔵 500 Nifty Stocks Covered</span>
+  </div>
+</section>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HOW IT WORKS -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <h3>Prepare Your Portfolio</h3>
+        <p>An Excel file (.xlsx) with a column named <b>Symbol</b> (NSE ticker) and optionally a <b>Weight</b> column (e.g. 0.15 for 15%). See the sample format below.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <h3>Upload & Analyse</h3>
+        <p>Drop your file in the upload zone. The entire analysis runs <b>in your browser</b> — your data never leaves your device. Results appear instantly.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <h3>Download Heat Map</h3>
+        <p>Get a colour-coded Excel heat map of your portfolio's exposure across First-Order, Second-Order, and Third-Order cascade channels.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAMPLE FORMAT -->
+  <div class="format-box" style="margin-bottom:24px;">
+    <h3>📋 Expected Excel Format (any sheet, first sheet used)</h3>
+    <table class="format-table">
+      <thead><tr><th>Symbol</th><th>Weight (optional)</th><th>Company Name (optional)</th></tr></thead>
+      <tbody>
+        <tr><td>RELIANCE</td><td>0.15</td><td>Reliance Industries Ltd.</td></tr>
+        <tr><td>TCS</td><td>0.12</td><td>Tata Consultancy Services</td></tr>
+        <tr><td>HDFCBANK</td><td>0.10</td><td>HDFC Bank Ltd.</td></tr>
+        <tr><td>INFY</td><td>0.08</td><td>Infosys Ltd.</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--text2);margin-top:8px;">The <b>Symbol</b> column must match NSE ticker symbols (e.g. RELIANCE, TCS, HDFCBANK). Column header is case-insensitive. Weight column is optional — if missing, equal weights are assumed.</p>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-section" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📊</div>
+    <h2>Drop your portfolio Excel here</h2>
+    <p>or click to browse — supports .xlsx and .xls files</p>
+    <button class="btn btn-gold" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+      📁 Choose Excel File
+    </button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+    <div class="hint">🔒 100% private — all processing happens in your browser. No data is uploaded to any server.</div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p style="color:var(--text2);">Analysing your portfolio…</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <h2>📊 Portfolio Exposure Analysis</h2>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="resetTool()">↩ Upload New File</button>
+        <button class="btn btn-green" onclick="downloadExcel()" id="downloadBtn">⬇ Download Excel Report</button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="kpi-strip" id="kpiStrip"></div>
+
+    <!-- Charts -->
+    <div class="sector-chart">
+      <div class="chart-box">
+        <div class="chart-title">Portfolio Risk Distribution</div>
+        <div class="dist-bars" id="distBars"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Exposure by Classification</div>
+        <div class="donut-wrap" id="donutWrap"></div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <span>Filter:</span>
+      <button class="filt f-all active" onclick="filterTable('ALL',this)">All</button>
+      <button class="filt f-crit" onclick="filterTable('CRITICAL',this)">🔴 Critical</button>
+      <button class="filt f-elev" onclick="filterTable('ELEVATED',this)">🟠 Elevated</button>
+      <button class="filt f-neu" onclick="filterTable('NEUTRAL',this)">⚫ Neutral</button>
+      <button class="filt f-low" onclick="filterTable('LOW RISK',this)">🟢 Low Risk</button>
+      <button class="filt f-ben" onclick="filterTable('BENEFICIARY',this)">🔵 Beneficiary</button>
+    </div>
+
+    <!-- Main results table -->
+    <div class="table-wrap">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Symbol</th>
+            <th>Company</th>
+            <th>Industry</th>
+            <th class="c">Wt%</th>
+            <th class="c">F1<br>Direct</th>
+            <th class="c">F2<br>Supply</th>
+            <th class="c">F3<br>Macro</th>
+            <th class="c">Overall</th>
+            <th class="c">Risk Band</th>
+            <th class="c">Status</th>
+            <th>Key Risk / Opportunity</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Unmatched -->
+    <div id="unmatched-section" style="display:none;">
+      <div class="unmatched-box">
+        <h3>⚠ Tickers Not Found in Database (<span id="unmatchedCount">0</span>)</h3>
+        <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">These symbols were in your file but not found in our Nifty 500 database. Check for typos or non-Nifty500 stocks.</p>
+        <div class="unmatched-chips" id="unmatchedChips"></div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /main -->
+
+<footer>
+  <p>
+    Data Source: Nifty 500 Iran/Oil Conflict Exposure Research · March 2026 |
+    Sources: Emkay Research · MSCI · Goldman Sachs · Deloitte Insights · WEF · Business Standard<br>
+    <b style="color:var(--gold)">Disclaimer:</b> This tool is for informational purposes only and does not constitute investment advice. All analysis is based on research as of March 2026.
+    Built as a free client-side tool — no server, no data storage.
+  </p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// EMBEDDED NIFTY 500 DATABASE
+// ═══════════════════════════════════════════════════════
+const DB = [{"rank":1,"name":"Aarti Industries Ltd.","symbol":"AARTIIND","industry":"Chemicals","f1":9,"f2":8,"f3":5,"overall":7.3,"band":"CRITICAL","classification":"AT RISK","note":"Benzene-based specialty chem: crude-linked feedstock; GCC supply contracts disrupted; 6% ME revenue"},{"rank":2,"name":"ACC Ltd.","symbol":"ACC","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel ~30-35% of manufacturing cost; petcoke/coal inflation; logistics diesel surge"},{"rank":3,"name":"Ambuja Cements Ltd.","symbol":"AMBUJACEM","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Same cost structure as ACC; Adani group synergies; significant cement capacity additions"},{"rank":4,"name":"Dalmia Bharat Ltd.","symbol":"DALBHARAT","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel (petcoke/coal) 30-35% of cement manufacturing cost; diesel logistics inflation; real estate demand slowdown"},{"rank":5,"name":"Grasim Industries Ltd.","symbol":"GRASIM","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel (petcoke/coal) 30-35% of cement manufacturing cost; diesel logistics inflation; real estate demand slowdown"},{"rank":6,"name":"India Cements Ltd.","symbol":"INDIACEM","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel (petcoke/coal) 30-35% of cement manufacturing cost; diesel logistics inflation; real estate demand slowdown"},{"rank":7,"name":"JSW Cement Ltd.","symbol":"JSWCEMENT","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel (petcoke/coal) 30-35% of cement manufacturing cost; diesel logistics inflation; real estate demand slowdown"},{"rank":8,"name":"Nuvoco Vistas Corporation Ltd.","symbol":"NUVOCO","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"Kiln fuel (petcoke/coal) 30-35% of cement manufacturing cost; diesel logistics inflation; real estate demand slowdown"},{"rank":9,"name":"UltraTech Cement Ltd.","symbol":"ULTRACEMCO","industry":"Construction Materials","f1":8,"f2":7,"f3":6,"overall":7.0,"band":"CRITICAL","classification":"AT RISK","note":"India's largest cement co; highest petcoke consumption; EBITDA/t sensitive to fuel prices"},{"rank":10,"name":"J.K. Cement Ltd.","symbol":"JKCEMENT","industry":"Construction Materials","f1":8,"f2":7,"f3":5,"overall":6.7,"band":"ELEVATED","classification":"AT RISK","note":"White cement + grey cement; petcoke dominant; premium products partially insulate"},{"rank":11,"name":"Shree Cement Ltd.","symbol":"SHREECEM","industry":"Construction Materials","f1":8,"f2":7,"f3":5,"overall":6.7,"band":"ELEVATED","classification":"AT RISK","note":"Premium EBITDA/t but kiln fuel exposure equally high; Rajasthan plants use petcoke"},{"rank":12,"name":"The Ramco Cements Ltd.","symbol":"RAMCOCEM","industry":"Construction Materials","f1":8,"f2":7,"f3":5,"overall":6.7,"band":"ELEVATED","classification":"AT RISK","note":"Southern market cement; coal/petcoke; logistics from ports exposed to shipping cost inflation"},{"rank":13,"name":"Anupam Rasayan India Ltd.","symbol":"ANURAS","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":14,"name":"Bayer Cropscience Ltd.","symbol":"BAYERCROP","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":15,"name":"Chambal Fertilizers & Chemicals Ltd.","symbol":"CHAMBLFERT","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":16,"name":"Deepak Fertilisers & Petrochemicals Corp. Ltd.","symbol":"DEEPAKFERT","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":17,"name":"Deepak Nitrite Ltd.","symbol":"DEEPAKNTR","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Phenol/acetone from crude; Dahej plant energy-intensive; ME revenue exposure"},{"rank":18,"name":"Fertilisers and Chemicals Travancore Ltd.","symbol":"FACT","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":19,"name":"Gujarat Fluorochemicals Ltd.","symbol":"FLUOROCHEM","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":20,"name":"Himadri Speciality Chemical Ltd.","symbol":"HSCL","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":21,"name":"Jubilant Ingrevia Ltd.","symbol":"JUBLINGREA","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":22,"name":"Linde India Ltd.","symbol":"LINDEINDIA","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":23,"name":"PCBL Chemical Ltd.","symbol":"PCBL","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":24,"name":"PI Industries Ltd.","symbol":"PIIND","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Pharma intermediates: petrochemical feedstock sensitivity; China-linked supply chain"},{"rank":25,"name":"Paradeep Phosphates Ltd.","symbol":"PARADEEP","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":26,"name":"Pidilite Industries Ltd.","symbol":"PIDILITIND","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":27,"name":"Solar Industries India Ltd.","symbol":"SOLARINDS","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":28,"name":"Sumitomo Chemical India Ltd.","symbol":"SUMICHEM","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":29,"name":"Supreme Petrochem Ltd.","symbol":"SPLPETRO","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":30,"name":"Tata Chemicals Ltd.","symbol":"TATACHEM","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":31,"name":"UPL Ltd.","symbol":"UPL","industry":"Chemicals","f1":8,"f2":7,"f3":4,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Crude-derived feedstock (benzene, ethylene, toluene) forms core raw material; Hormuz disruption hits GCC supply contracts"},{"rank":32,"name":"AWL Agri Business Ltd.","symbol":"AWL","industry":"Fast Moving Consumer Goods","f1":7,"f2":7,"f3":5,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Palm oil/edible oil processor: CPO prices directly tied to crude via biodiesel; India largest CPO processor"},{"rank":33,"name":"JSW Steel Ltd.","symbol":"JSWSTEEL","industry":"Metals & Mining","f1":7,"f2":7,"f3":5,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Integrated steel: coking coal import disruption; gas-based DRI at risk; high leverage"},{"rank":34,"name":"Steel Authority of India Ltd.","symbol":"SAIL","industry":"Metals & Mining","f1":7,"f2":7,"f3":5,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"PSU steel: coal import exposure; blast furnace energy intensity; defence/infra demand cushion"},{"rank":35,"name":"Tata Steel Ltd.","symbol":"TATASTEEL","industry":"Metals & Mining","f1":7,"f2":7,"f3":5,"overall":6.3,"band":"ELEVATED","classification":"AT RISK","note":"Coal-intensive blast furnace steel; Europe ops energy cost surge; shipping disruption on exports"},{"rank":36,"name":"Castrol India Ltd.","symbol":"CASTROLIND","industry":"Oil Gas & Consumable Fuels","f1":7,"f2":6,"f3":5,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Lubricants from base oil (crude derivative); input cost spike; retail pricing power limited"},{"rank":37,"name":"Navin Fluorine International Ltd.","symbol":"NAVINFLUOR","industry":"Chemicals","f1":7,"f2":7,"f3":4,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Fluorine chemistry: HF from industrial gases; energy-intensive processes; ME export exposure"},{"rank":38,"name":"SRF Ltd.","symbol":"SRF","industry":"Chemicals","f1":7,"f2":7,"f3":4,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Specialty chemicals + packaging films: fluorochemicals from HF; energy and polymer costs"},{"rank":39,"name":"Apollo Tyres Ltd.","symbol":"APOLLOTYRE","industry":"Automobile and Auto Components","f1":6,"f2":7,"f3":5,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Tyre: natural rubber + synthetic rubber (from butadiene/crude); direct feedstock exposure"},{"rank":40,"name":"Balkrishna Industries Ltd.","symbol":"BALKRISIND","industry":"Automobile and Auto Components","f1":6,"f2":7,"f3":5,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Off-highway tyres: global ag/mining market; raw material exposure similar to MRF/Apollo"},{"rank":41,"name":"Ceat Ltd.","symbol":"CEATLTD","industry":"Automobile and Auto Components","f1":6,"f2":7,"f3":5,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Tyre: diversified tyre player; same crude-linked input cost structure"},{"rank":42,"name":"MRF Ltd.","symbol":"MRF","industry":"Automobile and Auto Components","f1":6,"f2":7,"f3":5,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Tyre: same as Apollo; raw rubber, carbon black, and synthetic rubber all crude-linked"},{"rank":43,"name":"Action Construction Equipment Ltd.","symbol":"ACE","industry":"Capital Goods","f1":5,"f2":6,"f3":7,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"Construction equipment: dual hit — steel input cost + real estate/infra capex deferral"},{"rank":44,"name":"Atul Ltd.","symbol":"ATUL","industry":"Chemicals","f1":7,"f2":6,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Bulk and specialty chemicals: multiple crude-derived feedstocks; European export channel hit"},{"rank":45,"name":"National Aluminium Co. Ltd.","symbol":"NATIONALUM","industry":"Metals & Mining","f1":7,"f2":6,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Aluminium smelting: extremely energy-intensive; captive power plant uses coal; input cost surge"},{"rank":46,"name":"Reliance Industries Ltd.","symbol":"RELIANCE","industry":"Oil Gas & Consumable Fuels","f1":7,"f2":6,"f3":4,"overall":5.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Integrated refining-retail: GRM expansion on crude price lag; Jio/retail partially insulates; net beneficiary"},{"rank":47,"name":"Aegis Logistics Ltd.","symbol":"AEGISLOG","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":7,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"LPG/chemical logistics terminal: Hormuz disruption affects sourcing; war risk premium on insurance"},{"rank":48,"name":"Aegis Vopak Terminals Ltd.","symbol":"AEGISVOPAK","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":7,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Tank terminal storage: business model resilient but sourcing risk from disrupted shipping lanes"},{"rank":49,"name":"Chennai Petroleum Corporation Ltd.","symbol":"CHENNPETRO","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":7,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Standalone refiner: crude feedstock exposure high; GRM volatility; limited downstream integration"},{"rank":50,"name":"Coromandel International Ltd.","symbol":"COROMANDEL","industry":"Chemicals","f1":6,"f2":7,"f3":4,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Fertiliser + agrochemicals: natural gas feedstock for DAP; phosphate import disruption from ME"},{"rank":51,"name":"Maruti Suzuki India Ltd.","symbol":"MARUTI","industry":"Automobile and Auto Components","f1":4,"f2":6,"f3":7,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Passenger vehicle OEM: polymer/rubber inputs rise; consumer fuel anxiety reduces PV demand"},{"rank":52,"name":"Hero MotoCorp Ltd.","symbol":"HEROMOTOCO","industry":"Automobile and Auto Components","f1":4,"f2":5,"f3":7,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"2W commuter OEM: rural consumer fuel cost most impacted; commuter segment defensive but volume risk"},{"rank":53,"name":"Oil & Natural Gas Corporation Ltd.","symbol":"ONGC","industry":"Oil Gas & Consumable Fuels","f1":9,"f2":5,"f3":2,"overall":5.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Upstream E&P: every $10/bbl Brent rise adds ~₹3,000-4,000cr to net realisation; direct revenue beneficiary"},{"rank":54,"name":"Oil India Ltd.","symbol":"OIL","industry":"Oil Gas & Consumable Fuels","f1":9,"f2":5,"f3":2,"overall":5.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Upstream E&P: revenue directly linked to crude oil price; significant beneficiary of Brent surge"},{"rank":55,"name":"Bharat Petroleum Corporation Ltd.","symbol":"BPCL","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":6,"f3":4,"overall":5.3,"band":"ELEVATED","classification":"NEUTRAL","note":"OMC: downstream refiner faces under-recovery risk if govt caps retail prices; partial inventory gain offsets"},{"rank":56,"name":"Hindalco Industries Ltd.","symbol":"HINDALCO","industry":"Metals & Mining","f1":6,"f2":6,"f3":4,"overall":5.3,"band":"ELEVATED","classification":"NEUTRAL","note":"Aluminium: energy-intensive but aluminium prices also rise in commodity super-cycle; Novelis buffer"},{"rank":57,"name":"Hindustan Petroleum Corporation Ltd.","symbol":"HINDPETRO","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":6,"f3":4,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"OMC: highest under-recovery risk among OMCs; leverage means every Brent spike hits hard; downstream-only"},{"rank":58,"name":"Indian Oil Corporation Ltd.","symbol":"IOC","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":6,"f3":4,"overall":5.3,"band":"ELEVATED","classification":"NEUTRAL","note":"Largest OMC: govt-managed pricing partially shields; pipeline assets add resilience; diversified refining"},{"rank":59,"name":"3M India Ltd.","symbol":"3MINDIA","industry":"Diversified","f1":5,"f2":6,"f3":5,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"Adhesives/polymers/solvents from crude-derived feedstock; US parent supply chain disruption"},{"rank":60,"name":"APL Apollo Tubes Ltd.","symbol":"APLAPOLLO","industry":"Capital Goods","f1":5,"f2":6,"f3":5,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"Steel tubes: energy-intensive steel inputs; construction end-demand at risk; direct energy cost secondary"},{"rank":61,"name":"Bajaj Auto Ltd.","symbol":"BAJAJ-AUTO","industry":"Automobile and Auto Components","f1":4,"f2":5,"f3":6,"overall":5.0,"band":"ELEVATED","classification":"AT RISK","note":"2W/3W OEM: consumer transport budget pressure; export markets disrupted by ME conflict"},{"rank":62,"name":"GAIL (India) Ltd.","symbol":"GAIL","industry":"Oil Gas & Consumable Fuels","f1":7,"f2":5,"f3":3,"overall":5.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Gas transmission: higher LNG prices improve EBIT on spot marketing; network fee regulated"},{"rank":63,"name":"Hindustan Unilever Ltd.","symbol":"HINDUNILVR","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":4,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Largest FMCG: palm oil, petrochemical packaging cost pressure; strong pricing power and volume resilience"},{"rank":64,"name":"ITC Ltd.","symbol":"ITC","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":4,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Cigarettes (inelastic) + hotels (demand risk) + agri; cigarettes defensive; hotels at macro risk"},{"rank":65,"name":"Nestle India Ltd.","symbol":"NESTLEIND","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":4,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Food FMCG: packaging/logistics costs; strong pricing power; consumer staples resilient"},{"rank":66,"name":"Tata Consumer Products Ltd.","symbol":"TATACONSUM","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":4,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Tea/salt: defensive staples; supply chain disruption modest; international revenues partial buffer"},{"rank":67,"name":"Larsen & Toubro Ltd.","symbol":"LT","industry":"Construction","f1":3,"f2":5,"f3":6,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"L&T engineering: defence and infrastructure orders resilient; private capex at risk; oil & gas vertical benefits"},{"rank":68,"name":"DLF Ltd.","symbol":"DLF","industry":"Realty","f1":3,"f2":5,"f3":8,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"Premium real estate: luxury buyer confidence declines; input costs rise; interest rate risk"},{"rank":69,"name":"Godrej Properties Ltd.","symbol":"GODREJPROP","industry":"Realty","f1":3,"f2":5,"f3":8,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"Real estate developer: construction material cost surge; home loan rate risk; launches at risk"},{"rank":70,"name":"Sobha Ltd.","symbol":"SOBHA","industry":"Realty","f1":3,"f2":5,"f3":7,"overall":5.0,"band":"ELEVATED","classification":"AT RISK","note":"Luxury residential: NRI buying from Gulf could DECLINE sharply as Gulf economies contract"},{"rank":71,"name":"InterGlobe Aviation Ltd.","symbol":"INDIGO","industry":"Consumer Services","f1":9,"f2":6,"f3":7,"overall":7.3,"band":"CRITICAL","classification":"AT RISK","note":"IndiGo: Aviation fuel (ATF) ~35-40% of operating cost; direct crude exposure; Brent $110+ critical"},{"rank":72,"name":"ABB India Ltd.","symbol":"ABB","industry":"Capital Goods","f1":3,"f2":5,"f3":6,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"Power and industrial automation: electrification orders benefit from RE push; capex deferral risk"},{"rank":73,"name":"Siemens Ltd.","symbol":"SIEMENS","industry":"Capital Goods","f1":3,"f2":5,"f3":6,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"Industrial tech: energy efficiency orders surge; some capex deferral risk; German parent supply chain"},{"rank":74,"name":"AIA Engineering Ltd.","symbol":"AIAENG","industry":"Capital Goods","f1":4,"f2":5,"f3":4,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Wear parts for mining/cement: energy cost in foundry; mining capex relatively resilient; export buffer"},{"rank":75,"name":"NTPC Ltd.","symbol":"NTPC","industry":"Power","f1":6,"f2":4,"f3":3,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Thermal + renewable PSU: coal cost inflation in thermal; regulated tariffs pass-through; RE expansion positive"},{"rank":76,"name":"Coal India Ltd.","symbol":"COALINDIA","industry":"Oil Gas & Consumable Fuels","f1":5,"f2":5,"f3":3,"overall":4.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Higher thermal coal demand; pricing power; substitute for LNG-fired power"},{"rank":77,"name":"Petronet LNG Ltd.","symbol":"PETRONET","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":5,"f3":3,"overall":4.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"LNG regasification: capacity fully contracted; higher throughput fee linked to LNG value"},{"rank":78,"name":"Gujarat State Petronet Ltd.","symbol":"GSPL","industry":"Oil Gas & Consumable Fuels","f1":6,"f2":5,"f3":3,"overall":4.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Gas transmission pipeline: volume fees; benefits from gas price elevation"},{"rank":79,"name":"Adani Total Gas Ltd.","symbol":"ATGL","industry":"Oil Gas & Consumable Fuels","f1":5,"f2":5,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"NEUTRAL","note":"City gas distribution: retail CNG prices pass-through delayed; volume risk if industrial demand falls"},{"rank":80,"name":"Indraprastha Gas Ltd.","symbol":"IGL","industry":"Oil Gas & Consumable Fuels","f1":5,"f2":5,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"NEUTRAL","note":"City gas distribution: compressed margins if APM gas allocation reduced; consumer usage resilient"},{"rank":81,"name":"Mahanagar Gas Ltd.","symbol":"MGL","industry":"Oil Gas & Consumable Fuels","f1":5,"f2":5,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"NEUTRAL","note":"Same as IGL; Mumbai CNG; pass-through mechanism limits downside but also upside"},{"rank":82,"name":"Adani Energy Solutions Ltd.","symbol":"ADANIENSOL","industry":"Power","f1":2,"f2":4,"f3":5,"overall":3.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Power transmission: regulated returns; benefits from energy transition urgency; no fuel exposure"},{"rank":83,"name":"ACME Solar Holdings Ltd.","symbol":"ACMESOLAR","industry":"Power","f1":2,"f2":4,"f3":3,"overall":3.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Pure-play solar IPP: long-term PPAs; no fuel cost; Iran conflict accelerates RE narrative"},{"rank":84,"name":"Power Grid Corporation of India Ltd.","symbol":"POWERGRID","industry":"Power","f1":1,"f2":3,"f3":3,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Electricity transmission: fully regulated; no fuel cost; energy transition drives capex"},{"rank":85,"name":"NHPC Ltd.","symbol":"NHPC","industry":"Power","f1":1,"f2":3,"f3":2,"overall":2.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hydro power: zero fuel cost; regulated tariff; defensive earnings; full beneficiary"},{"rank":86,"name":"SJVN Ltd.","symbol":"SJVN","industry":"Power","f1":1,"f2":3,"f3":2,"overall":2.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hydro + RE: zero fuel cost; steady dividend; strong balance sheet"},{"rank":87,"name":"Sun Pharmaceutical Industries Ltd.","symbol":"SUNPHARMA","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Largest pharma: defensive demand; API shipping disruption modest; US/EU pricing power intact"},{"rank":88,"name":"Dr. Reddy's Laboratories Ltd.","symbol":"DRREDDY","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Generic pharma: US generics revenue in USD; some API China sourcing risk; defensive sector"},{"rank":89,"name":"Cipla Ltd.","symbol":"CIPLA","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Respiratory/HIV focus: essential medicines inelastic; petrochem packaging minor cost risk"},{"rank":90,"name":"Divi's Laboratories Ltd.","symbol":"DIVISLAB","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"API/CRAMS manufacturer: solvent costs from petrochemicals; long-term contracts protect margins"},{"rank":91,"name":"Abbott India Ltd.","symbol":"ABBOTINDIA","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"MNC pharma India: established brand portfolio; defensive earnings; minimal fuel exposure"},{"rank":92,"name":"Apollo Hospitals Enterprise Ltd.","symbol":"APOLLOHOSP","industry":"Healthcare","f1":2,"f2":4,"f3":3,"overall":3.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hospitals: diesel generators; inelastic demand; pricing power; defensive through conflict"},{"rank":93,"name":"Fortis Healthcare Ltd.","symbol":"FORTIS","industry":"Healthcare","f1":2,"f2":4,"f3":3,"overall":3.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hospital chain: similar to Apollo; non-discretionary healthcare demand unchanged"},{"rank":94,"name":"Max Healthcare Institute Ltd.","symbol":"MAXHEALTH","industry":"Healthcare","f1":2,"f2":4,"f3":3,"overall":3.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hospitals North India: inelastic demand; diesel backup costs minor; relatively insulated"},{"rank":95,"name":"Dr. Lal Path Labs Ltd.","symbol":"LALPATHLAB","industry":"Healthcare","f1":2,"f2":3,"f3":3,"overall":2.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Diagnostic lab: minimal energy exposure; non-discretionary testing demand; defensive"},{"rank":96,"name":"Tata Consultancy Services Ltd.","symbol":"TCS","industry":"Information Technology","f1":1,"f2":3,"f3":4,"overall":2.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"USD revenue: INR depreciation boosts earnings; low energy costs; IT budget global risk mild"},{"rank":97,"name":"Infosys Ltd.","symbol":"INFY","industry":"Information Technology","f1":1,"f2":3,"f3":4,"overall":2.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"USD revenue: INR weakness positive; energy efficient operations; demand resilient in core services"},{"rank":98,"name":"HCL Technologies Ltd.","symbol":"HCLTECH","industry":"Information Technology","f1":1,"f2":3,"f3":4,"overall":2.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"IT+IP products: USD revenues; strong order book; muted energy exposure"},{"rank":99,"name":"Wipro Ltd.","symbol":"WIPRO","industry":"Information Technology","f1":1,"f2":3,"f3":4,"overall":2.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"IT services: USD earner; INR depreciation benefit; energy/utility vertical may see spending changes"},{"rank":100,"name":"Persistent Systems Ltd.","symbol":"PERSISTENT","industry":"Information Technology","f1":1,"f2":2,"f3":4,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Mid-cap IT: USD revenue; product engineering focus; low energy exposure; defensive"},{"rank":101,"name":"LTIMindtree Ltd.","symbol":"LTIM","industry":"Information Technology","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"IT engineering services: USD revenue; strong manufacturing vertical; insulated from oil"},{"rank":102,"name":"Muthoot Finance Ltd.","symbol":"MUTHOOTFIN","industry":"Financial Services","f1":1,"f2":2,"f3":4,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Gold-backed NBFC: gold price surges in geopolitical risk; AUM/collateral value strengthens significantly"},{"rank":103,"name":"Manappuram Finance Ltd.","symbol":"MANAPPURAM","industry":"Financial Services","f1":1,"f2":2,"f3":4,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Gold loan NBFC: same as Muthoot; direct beneficiary of gold price surge"},{"rank":104,"name":"Titan Company Ltd.","symbol":"TITAN","industry":"Consumer Durables","f1":2,"f2":4,"f3":5,"overall":3.7,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Jewellery/watches: gold prices surge in geopolitical risk; jewellery demand counter-cyclical; Tanishq benefits"},{"rank":105,"name":"Bharat Electronics Ltd.","symbol":"BEL","industry":"Capital Goods","f1":2,"f2":3,"f3":2,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defence electronics: Bofors radar, EW systems; direct beneficiary of heightened defence posture"},{"rank":106,"name":"Hindustan Aeronautics Ltd.","symbol":"HAL","industry":"Capital Goods","f1":2,"f2":3,"f3":2,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Hindustan Aeronautics: defence spending accelerates in conflict; order book and pricing improve"},{"rank":107,"name":"Suzlon Energy Ltd.","symbol":"SUZLON","industry":"Capital Goods","f1":3,"f2":4,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Wind energy OEM: India RE push accelerates post-conflict; order book benefits"},{"rank":108,"name":"Inox Wind Ltd.","symbol":"INOXWIND","industry":"Capital Goods","f1":3,"f2":4,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Wind energy equipment: accelerated demand from energy transition post-conflict"},{"rank":109,"name":"HDFC Bank Ltd.","symbol":"HDFCBANK","industry":"Financial Services","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"Largest private bank: credit quality risk from macro slowdown; rate cycle uncertain; strong capital"},{"rank":110,"name":"ICICI Bank Ltd.","symbol":"ICICIBANK","industry":"Financial Services","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"Private bank: well-capitalised; retail and corporate credit at macro risk; Gulf NRI remittance positive"},{"rank":111,"name":"Kotak Mahindra Bank Ltd.","symbol":"KOTAKBANK","industry":"Financial Services","f1":1,"f2":2,"f3":5,"overall":2.7,"band":"LOW RISK","classification":"NEUTRAL","note":"Conservative private bank: strong capital cushion; lower SME exposure than peers"},{"rank":112,"name":"State Bank of India","symbol":"SBIN","industry":"Financial Services","f1":1,"f2":3,"f3":6,"overall":3.3,"band":"LOW RISK","classification":"NEUTRAL","note":"PSU bank: large MSME and agri portfolio exposed to borrower stress; Govt support backstop"},{"rank":113,"name":"Axis Bank Ltd.","symbol":"AXISBANK","industry":"Financial Services","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"Private bank: mid-corporate and retail; credit stress possible in energy-exposed sectors"},{"rank":114,"name":"IndusInd Bank Ltd.","symbol":"INDUSINDBK","industry":"Financial Services","f1":1,"f2":4,"f3":6,"overall":3.7,"band":"NEUTRAL","classification":"AT RISK","note":"Microfinance and vehicle finance heavy: rural borrower stress from fuel costs; CV/tractor loan quality"},{"rank":115,"name":"AU Small Finance Bank Ltd.","symbol":"AUBANK","industry":"Financial Services","f1":1,"f2":3,"f3":7,"overall":3.7,"band":"NEUTRAL","classification":"AT RISK","note":"Small finance bank: MSME/SME heavy; borrower cash flows squeezed by fuel inflation"},{"rank":116,"name":"Bajaj Finance Ltd.","symbol":"BAJFINANCE","industry":"Financial Services","f1":1,"f2":3,"f3":6,"overall":3.3,"band":"LOW RISK","classification":"NEUTRAL","note":"Consumer finance NBFC: discretionary lending at risk; used car/2W/consumer durable loans exposed"},{"rank":117,"name":"Bajaj Finserv Ltd.","symbol":"BAJAJFINSV","industry":"Financial Services","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"Insurance + Bajaj Finance: insurance may see elevated claims; overall defensive relative to market"},{"rank":118,"name":"360 ONE WAM Ltd.","symbol":"360ONE","industry":"Financial Services","f1":1,"f2":3,"f3":6,"overall":3.3,"band":"LOW RISK","classification":"NEUTRAL","note":"Wealth manager: AUM mark-to-market risk; HNI alternatives demand (gold, commodities) positive"},{"rank":119,"name":"Aadhar Housing Finance Ltd.","symbol":"AADHARHFC","industry":"Financial Services","f1":1,"f2":2,"f3":7,"overall":3.3,"band":"LOW RISK","classification":"NEUTRAL","note":"Affordable housing finance: borrower income stress from fuel inflation; rate cycle risk"},{"rank":120,"name":"Aavas Financiers Ltd.","symbol":"AAVAS","industry":"Financial Services","f1":1,"f2":2,"f3":7,"overall":3.3,"band":"LOW RISK","classification":"NEUTRAL","note":"Housing finance MSME: semi-urban/rural borrower income stress; rate sensitivity"},{"rank":121,"name":"Bharti Airtel Ltd.","symbol":"BHARTIARTL","industry":"Telecommunication","f1":2,"f2":3,"f3":4,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"India + Africa telecom: tower diesel costs; strong ARPU growth; defensive subscription revenue"},{"rank":122,"name":"Tata Motors Ltd.","symbol":"TATAMOTORS","industry":"Automobile and Auto Components","f1":5,"f2":7,"f3":6,"overall":6.0,"band":"ELEVATED","classification":"AT RISK","note":"JLR and domestic CVs: Jaguar/Land Rover fuel efficiency concerns; CNG vehicle demand boost"},{"rank":123,"name":"Mahindra & Mahindra Ltd.","symbol":"M&M","industry":"Automobile and Auto Components","f1":4,"f2":6,"f3":6,"overall":5.3,"band":"ELEVATED","classification":"NEUTRAL","note":"SUV + tractors + EV: farm tractor demand resilient; EV segment benefits from oil spike"},{"rank":124,"name":"Eicher Motors Ltd.","symbol":"EICHERMOT","industry":"Automobile and Auto Components","f1":4,"f2":5,"f3":5,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"Royal Enfield: premium segment; VECV trucks; fuel cost less discretionary at premium end"},{"rank":125,"name":"Tata Power Co. Ltd.","symbol":"TATAPOWER","industry":"Power","f1":5,"f2":4,"f3":4,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Integrated: RE and thermal mix; Mundra UMPP fuel cost exposure; solar/wind growing"},{"rank":126,"name":"Havells India Ltd.","symbol":"HAVELLS","industry":"Consumer Durables","f1":3,"f2":5,"f3":6,"overall":4.7,"band":"NEUTRAL","classification":"AT RISK","note":"Consumer electricals: copper/polymer inputs; consumer discretionary spending risk"},{"rank":127,"name":"Lupin Ltd.","symbol":"LUPIN","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":128,"name":"Mankind Pharma Ltd.","symbol":"MANKIND","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":129,"name":"Aurobindo Pharma Ltd.","symbol":"AUROPHARMA","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":130,"name":"Torrent Pharmaceuticals Ltd.","symbol":"TORNTPHARM","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":131,"name":"Zydus Lifesciences Ltd.","symbol":"ZYDUSLIFE","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":132,"name":"Biocon Ltd.","symbol":"BIOCON","industry":"Healthcare","f1":2,"f2":5,"f3":3,"overall":3.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Defensive inelastic demand; API supply chain disruption via China shipping; packaging cost pressure minimal"},{"rank":133,"name":"Indian Hotels Co. Ltd.","symbol":"INDHOTEL","industry":"Consumer Services","f1":3,"f2":4,"f3":7,"overall":4.7,"band":"NEUTRAL","classification":"AT RISK","note":"Tata Hotels: travel demand destruction; business travel cutbacks; energy costs secondary"},{"rank":134,"name":"EIH Ltd.","symbol":"EIHOTEL","industry":"Consumer Services","f1":3,"f2":4,"f3":7,"overall":4.7,"band":"NEUTRAL","classification":"AT RISK","note":"Oberoi Hotels: high-end travel; business conferences decline; partially offset by oil sovereign wealth visitors"},{"rank":135,"name":"Vedanta Ltd.","symbol":"VEDL","industry":"Metals & Mining","f1":6,"f2":6,"f3":5,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Zinc/copper/oil: Cairn energy operations a partial beneficiary; zinc smelting energy cost"},{"rank":136,"name":"NMDC Ltd.","symbol":"NMDC","industry":"Metals & Mining","f1":5,"f2":5,"f3":4,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"Iron ore: energy for mining; steel demand slowdown risk; domestic focus limits FX"},{"rank":137,"name":"Britannia Industries Ltd.","symbol":"BRITANNIA","industry":"Fast Moving Consumer Goods","f1":4,"f2":5,"f3":5,"overall":4.7,"band":"NEUTRAL","classification":"NEUTRAL","note":"Biscuits: palm oil/packaging costs; consumer staple but margins at risk"},{"rank":138,"name":"Dabur India Ltd.","symbol":"DABUR","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":5,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Ayurvedic FMCG: ME revenue exposure (~25% international); oil-linked packaging; moderately exposed"},{"rank":139,"name":"Marico Ltd.","symbol":"MARICO","industry":"Fast Moving Consumer Goods","f1":3,"f2":5,"f3":5,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Coconut/edible oil based: palm oil price tied to crude via biodiesel; ME export exposure"},{"rank":140,"name":"Colgate Palmolive (India) Ltd.","symbol":"COLPAL","industry":"Fast Moving Consumer Goods","f1":4,"f2":6,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"NEUTRAL","note":"Packaging and logistics cost inflation; pricing power partially offsets; staples demand relatively inelastic"},{"rank":141,"name":"Godrej Consumer Products Ltd.","symbol":"GODREJCP","industry":"Fast Moving Consumer Goods","f1":4,"f2":6,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"AT RISK","note":"FMCG + Indonesia palm oil: direct palm oil exposure; international operations disrupted"},{"rank":142,"name":"Adani Ports and Special Economic Zone Ltd.","symbol":"ADANIPORTS","industry":"Services","f1":3,"f2":4,"f3":5,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Mixed: logistics/shipping services face cost inflation; human-capital services largely insulated"},{"rank":143,"name":"Tech Mahindra Ltd.","symbol":"TECHM","industry":"Information Technology","f1":1,"f2":3,"f3":5,"overall":3.0,"band":"LOW RISK","classification":"NEUTRAL","note":"Telecom-heavy IT: global telecom capex risk; otherwise USD earning beneficiary"},{"rank":144,"name":"Coforge Ltd.","symbol":"COFORGE","industry":"Information Technology","f1":1,"f2":2,"f3":4,"overall":2.3,"band":"BENEFICIARY","classification":"BENEFICIARY","note":"Mid-cap IT: BFS and travel verticals; travel tech may see headwinds; overall USD earner"},{"rank":145,"name":"Page Industries Ltd.","symbol":"PAGEIND","industry":"Textiles","f1":5,"f2":6,"f3":5,"overall":5.3,"band":"ELEVATED","classification":"AT RISK","note":"Polyester/synthetic fibre from petrochemicals; shipping cost surge on exports; consumer spending pressure on apparel"},{"rank":146,"name":"Asian Paints Ltd.","symbol":"ASIANPAINT","industry":"Consumer Durables","f1":4,"f2":6,"f3":7,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Petrochemical-derived plastics/polymers as inputs; consumer discretionary spend under pressure from higher fuel costs"},{"rank":147,"name":"Berger Paints India Ltd.","symbol":"BERGEPAINT","industry":"Consumer Durables","f1":4,"f2":6,"f3":7,"overall":5.7,"band":"ELEVATED","classification":"AT RISK","note":"Petrochemical-derived plastics/polymers as inputs; consumer discretionary spend under pressure from higher fuel costs"},{"rank":148,"name":"Bharat Heavy Electricals Ltd.","symbol":"BHEL","industry":"Capital Goods","f1":5,"f2":5,"f3":5,"overall":5.0,"band":"ELEVATED","classification":"NEUTRAL","note":"Power equipment PSU: thermal orders; RE equipment opportunity; execution delays likely"},{"rank":149,"name":"JSW Energy Ltd.","symbol":"JSWENERGY","industry":"Power","f1":4,"f2":4,"f3":4,"overall":4.0,"band":"NEUTRAL","classification":"NEUTRAL","note":"Renewable + thermal: growing RE portfolio cushions; hydro base provides stability"},{"rank":150,"name":"IRCTC","symbol":"IRCTC","industry":"Consumer Services","f1":4,"f2":4,"f3":5,"overall":4.3,"band":"NEUTRAL","classification":"NEUTRAL","note":"Rail catering/ticketing: rail travel substitutes air; Indian Railways a beneficiary of airline pain"}];
+
+// Build lookup map
+const DBMAP = {};
+DB.forEach(s => { DBMAP[s.symbol.toUpperCase()] = s; });
+
+let portfolioData = [];
+let analysedData  = [];
+
+// ── DRAG & DROP ──────────────────────────────────────────────────
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', ()=> dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+
+// ── FILE HANDLER ─────────────────────────────────────────────────
+function handleFile(file) {
+  if (!file) return;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      processPortfolio(rows);
+    } catch(err) {
+      alert('Error reading file: ' + err.message + '\nPlease ensure it is a valid .xlsx file.');
+      document.getElementById('loading').style.display = 'none';
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ── PROCESS PORTFOLIO ────────────────────────────────────────────
+function processPortfolio(rows) {
+  // Find column names (case-insensitive)
+  const sample = rows[0] || {};
+  const keys = Object.keys(sample);
+  const symKey = keys.find(k => k.toLowerCase().replace(/\s/g,'') === 'symbol') || keys[0];
+  const wtKey  = keys.find(k => k.toLowerCase().replace(/\s/g,'').includes('weight') || k.toLowerCase() === 'wt' || k.toLowerCase() === 'wt%');
+
+  const matched   = [];
+  const unmatched = [];
+  let totalWt = 0;
+
+  rows.forEach(row => {
+    const sym = String(row[symKey] || '').trim().toUpperCase();
+    if(!sym) return;
+    const wt = wtKey ? parseFloat(row[wtKey]) || 0 : 0;
+    if(wt > 0) totalWt += wt;
+    const dbEntry = DBMAP[sym];
+    if(dbEntry) matched.push({...dbEntry, userWt: wt});
+    else if(sym) unmatched.push(sym);
+  });
+
+  // Equal weight if no weights provided
+  const useEqualWt = totalWt === 0;
+  if(useEqualWt) matched.forEach(s => s.userWt = 1/matched.length);
+  else {
+    // Normalize if weights don't sum to ~1
+    if(totalWt < 0.5) {
+      // weights might be percentages (e.g. 15 instead of 0.15)
+      if(totalWt > 5) matched.forEach(s => s.userWt = s.userWt/100);
+    }
+    const wSum = matched.reduce((a,s) => a + s.userWt, 0);
+    if(wSum > 0) matched.forEach(s => s.userWt = s.userWt/wSum);
+  }
+
+  analysedData = matched.sort((a,b) => b.overall - a.overall);
+  portfolioData = {matched, unmatched, useEqualWt};
+
+  document.getElementById('loading').style.display = 'none';
+  renderResults(matched, unmatched);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function renderResults(matched, unmatched) {
+  document.getElementById('results').style.display = 'block';
+
+  // KPIs
+  const total   = matched.length;
+  const crit    = matched.filter(s => s.band === 'CRITICAL').length;
+  const elev    = matched.filter(s => s.band === 'ELEVATED').length;
+  const ben     = matched.filter(s => s.band === 'BENEFICIARY').length;
+  const wAvg    = matched.reduce((a,s) => a + s.overall * s.userWt, 0).toFixed(2);
+  const strip = document.getElementById('kpiStrip');
+  strip.innerHTML = `
+    <div class="kpi kpi-w"><div class="kpi-label">Wtd. Avg. Score</div><div class="kpi-val">${wAvg}</div><div class="kpi-sub">Out of 10 · Portfolio level</div></div>
+    <div class="kpi kpi-r"><div class="kpi-label">Critical Positions</div><div class="kpi-val">${crit}</div><div class="kpi-sub">Score ≥ 7.0 overall</div></div>
+    <div class="kpi kpi-a"><div class="kpi-label">Elevated Positions</div><div class="kpi-val">${elev}</div><div class="kpi-sub">Score 5.0–6.9</div></div>
+    <div class="kpi kpi-g"><div class="kpi-label">Beneficiaries</div><div class="kpi-val">${ben}</div><div class="kpi-sub">Net positive outlook</div></div>
+    <div class="kpi kpi-b"><div class="kpi-label">Holdings Analysed</div><div class="kpi-val">${total}</div><div class="kpi-sub">${unmatched.length} not matched</div></div>
+  `;
+
+  // Distribution bar chart
+  const bands = ['CRITICAL','ELEVATED','NEUTRAL','LOW RISK','BENEFICIARY'];
+  const bandCols = {'CRITICAL':'#C0392B','ELEVATED':'#D4860A','NEUTRAL':'#888','LOW RISK':'#1A8C4E','BENEFICIARY':'#1A5276'};
+  const dist = document.getElementById('distBars');
+  dist.innerHTML = bands.map(b => {
+    const cnt = matched.filter(s=>s.band===b).length;
+    const pct = total ? Math.round(cnt/total*100) : 0;
+    return `<div class="dist-row">
+      <div class="dist-label" style="color:${bandCols[b]};font-weight:700">${b}</div>
+      <div class="dist-track"><div class="dist-bar" style="width:${Math.max(pct,4)}%;background:${bandCols[b]}60"><span>${pct}%</span></div></div>
+      <div class="dist-count" style="color:${bandCols[b]}">${cnt}</div>
+    </div>`;
+  }).join('');
+
+  // Donut (SVG)
+  const donut = document.getElementById('donutWrap');
+  const bandData = bands.map(b => ({b, cnt: matched.filter(s=>s.band===b).length, col: bandCols[b]}));
+  const cx=60, cy=60, r=48, iR=28;
+  let cum=0;
+  const segs = bandData.map(d => {
+    const frac = total ? d.cnt/total : 0;
+    const start=cum, end=cum+frac*360;
+    cum=end;
+    const s1 = polarToXY(cx,cy,r,start), s2 = polarToXY(cx,cy,r,end);
+    const i1 = polarToXY(cx,cy,iR,start), i2 = polarToXY(cx,cy,iR,end);
+    const lg = frac > 0.5 ? 1 : 0;
+    return frac > 0 ? `<path d="M${s1.x},${s1.y} A${r},${r},0,${lg},1,${s2.x},${s2.y} L${i2.x},${i2.y} A${iR},${iR},0,${lg},0,${i1.x},${i1.y} Z" fill="${d.col}" opacity="0.85"/>` : '';
+  }).join('');
+  donut.innerHTML = `
+    <svg width="120" height="120" viewBox="0 0 120 120">${segs}<circle cx="${cx}" cy="${cy}" r="${iR-2}" fill="var(--bg2)"/><text x="${cx}" y="${cy+5}" text-anchor="middle" fill="var(--gold)" font-size="13" font-weight="bold">${total}</text></svg>
+    <div class="donut-legend">${bandData.map(d=>`<div class="dl-item"><div class="dl-dot" style="background:${d.col}"></div><span style="color:${d.col};font-weight:700">${d.b}</span> <span style="color:var(--text2);margin-left:4px">(${d.cnt})</span></div>`).join('')}</div>
+  `;
+
+  // Table
+  renderTable(matched, 'ALL');
+
+  // Unmatched
+  if(unmatched.length > 0) {
+    document.getElementById('unmatched-section').style.display = 'block';
+    document.getElementById('unmatchedCount').textContent = unmatched.length;
+    document.getElementById('unmatchedChips').innerHTML = unmatched.map(t=>`<span class="uchip">${t}</span>`).join('');
+  } else document.getElementById('unmatched-section').style.display = 'none';
+
+  // Reset filter
+  document.querySelectorAll('.filt').forEach(f => f.classList.remove('active'));
+  document.querySelector('.f-all').classList.add('active');
+}
+
+function polarToXY(cx,cy,r,deg) {
+  const rad = (deg-90) * Math.PI/180;
+  return {x: cx + r*Math.cos(rad), y: cy + r*Math.sin(rad)};
+}
+
+let currentFilter = 'ALL';
+function filterTable(band, el) {
+  currentFilter = band;
+  document.querySelectorAll('.filt').forEach(f=>f.classList.remove('active'));
+  el.classList.add('active');
+  renderTable(analysedData, band);
+}
+
+function renderTable(data, filter) {
+  const filtered = filter === 'ALL' ? data : data.filter(s => s.band === filter);
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = filtered.map((s, i) => {
+    const wtPct = (s.userWt * 100).toFixed(1);
+    const wtBarW = Math.round(s.userWt * 100 * 4); // scale
+    const sc = v => {
+      const cls = v>=8?'sc-c':v>=5?'sc-e':v<=3?'sc-l':'sc-e';
+      return `<span class="score-cell ${cls}">${v}</span>`;
+    };
+    const ov = s.overall;
+    const ovCls = ov>=7?'sc-c':ov>=5?'sc-e':ov<3.5?'sc-l':'sc-v';
+    const bpCls = {'CRITICAL':'bp-crit','ELEVATED':'bp-elev','NEUTRAL':'bp-neu','LOW RISK':'bp-low','BENEFICIARY':'bp-ben'}[s.band]||'bp-neu';
+    const clsCls = {'AT RISK':'bp-at','NEUTRAL':'bp-nt','BENEFICIARY':'bp-bf'}[s.classification]||'bp-nt';
+    return `<tr>
+      <td style="color:#667;font-size:11px">${i+1}</td>
+      <td class="ticker-cell">${s.symbol}</td>
+      <td style="font-size:12px">${s.name}</td>
+      <td style="font-size:11px;color:var(--text2)">${s.industry}</td>
+      <td class="c">
+        <div class="wt-bar">
+          <div class="wt-track"><div class="wt-fill" style="width:${Math.min(wtBarW,50)}px;background:var(--gold);opacity:0.6"></div></div>
+          <span style="font-size:11px;color:var(--text2)">${wtPct}%</span>
+        </div>
+      </td>
+      <td class="c">${sc(s.f1)}</td>
+      <td class="c">${sc(s.f2)}</td>
+      <td class="c">${sc(s.f3)}</td>
+      <td class="c"><span class="score-cell ${ovCls}" style="width:42px">${ov.toFixed(1)}</span></td>
+      <td class="c"><span class="band-pill ${bpCls}">${s.band}</span></td>
+      <td class="c"><span class="band-pill ${clsCls}">${s.classification}</span></td>
+      <td class="note-cell">${s.note}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text2)">No holdings match this filter.</td></tr>`;
+}
+
+// ── DOWNLOAD EXCEL ───────────────────────────────────────────────
+function downloadExcel() {
+  const wb2 = XLSX.utils.book_new();
+
+  // Sheet 1: Summary
+  const sumData = [
+    ['IRAN / OIL CONFLICT — PORTFOLIO EXPOSURE REPORT', '', '', '', '', '', '', '', '', '', ''],
+    ['Generated:', new Date().toLocaleDateString('en-IN'), '', 'Analysis Date:', 'March 31, 2026', '', '', '', '', '', ''],
+    [''],
+    ['PORTFOLIO SUMMARY', '', '', '', '', '', '', '', '', '', ''],
+    ['Total Holdings Analysed:', analysedData.length, '', 'Unmatched Tickers:', portfolioData.unmatched.length, '', '', '', '', '', ''],
+    ['Weighted Avg. Score:', parseFloat(analysedData.reduce((a,s)=>a+s.overall*s.userWt,0).toFixed(2)), '', 'Critical Positions:', analysedData.filter(s=>s.band==='CRITICAL').length, '', '', '', '', '', ''],
+    ['Beneficiary Positions:', analysedData.filter(s=>s.band==='BENEFICIARY').length, '', 'Elevated Positions:', analysedData.filter(s=>s.band==='ELEVATED').length, '', '', '', '', '', ''],
+    [''],
+  ];
+  const sumWs = XLSX.utils.aoa_to_sheet(sumData);
+  XLSX.utils.book_append_sheet(wb2, sumWs, 'Summary');
+
+  // Sheet 2: Full Analysis
+  const headers = ['Rank','Symbol','Company Name','Industry','Weight %','F1 Direct Energy','F2 Supply Chain','F3 Macro/Consumer','Overall Score','Risk Band','Classification','Key Risk / Opportunity'];
+  const rows2 = [headers, ...analysedData.map((s,i) => [
+    i+1, s.symbol, s.name, s.industry,
+    parseFloat((s.userWt*100).toFixed(2)),
+    s.f1, s.f2, s.f3, s.overall,
+    s.band, s.classification, s.note
+  ])];
+  const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols'] = [5,12,35,25,10,14,14,14,12,14,16,60].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb2, ws2, 'Full Analysis');
+
+  // Sheet 3: Beneficiaries
+  const benRows = [headers, ...analysedData.filter(s=>s.band==='BENEFICIARY').map((s,i) => [i+1, s.symbol, s.name, s.industry, parseFloat((s.userWt*100).toFixed(2)), s.f1, s.f2, s.f3, s.overall, s.band, s.classification, s.note])];
+  const ws3 = XLSX.utils.aoa_to_sheet(benRows);
+  ws3['!cols'] = ws2['!cols'];
+  XLSX.utils.book_append_sheet(wb2, ws3, 'Beneficiaries');
+
+  // Sheet 4: At Risk
+  const riskRows = [headers, ...analysedData.filter(s=>s.band==='CRITICAL'||s.band==='ELEVATED').map((s,i) => [i+1, s.symbol, s.name, s.industry, parseFloat((s.userWt*100).toFixed(2)), s.f1, s.f2, s.f3, s.overall, s.band, s.classification, s.note])];
+  const ws4 = XLSX.utils.aoa_to_sheet(riskRows);
+  ws4['!cols'] = ws2['!cols'];
+  XLSX.utils.book_append_sheet(wb2, ws4, 'Critical & Elevated');
+
+  // Sheet 5: Unmatched
+  if(portfolioData.unmatched.length > 0) {
+    const umRows = [['Unmatched Tickers (Not Found in Nifty 500 DB)'], ...portfolioData.unmatched.map(t=>[t])];
+    XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet(umRows), 'Unmatched Tickers');
+  }
+
+  XLSX.writeFile(wb2, 'Portfolio_Iran_Oil_Exposure_' + new Date().toISOString().slice(0,10) + '.xlsx');
+}
+
+function resetTool() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  analysedData = []; portfolioData = [];
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
